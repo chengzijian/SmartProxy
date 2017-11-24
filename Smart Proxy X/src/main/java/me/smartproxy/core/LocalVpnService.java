@@ -207,6 +207,7 @@ public class LocalVpnService extends VpnService implements Runnable {
             });
             StartResult result = Lantern.start(configDirFor(this, ""), 10000, ProxyConfig.IS_DEBUG);
             String httpAddr = result.getHTTPAddr();
+            //httpAddr = "111.62.251.66:80";
             writeLog("Lantern Http Address: %s", httpAddr);
             ProxyConfig.Instance.addProxy("http://" + httpAddr);
 
