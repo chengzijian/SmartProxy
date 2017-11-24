@@ -1,50 +1,38 @@
 package me.smartproxy.core;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 
-import me.smartproxy.tcpip.CommonMethods;
-import android.util.SparseIntArray;
-
-
+import net.ripe.commons.ip.Ipv4;
+import net.ripe.commons.ip.Ipv4Range;
+import net.ripe.commons.ip.SortedResourceSet;
 
 public class ChinaIpMaskManager {
 
-     static SparseIntArray  ChinaIpMaskDict = new SparseIntArray(3000);
-     static SparseIntArray MaskDict = new SparseIntArray();
- 
-     public static boolean isIPInChina(int ip){
-    	 boolean found=false;
-    	 for (int i = 0; i < MaskDict.size(); i++) {
-			int mask=MaskDict.keyAt(i);
-			int networkIP = ip & mask;
-			int mask2 = ChinaIpMaskDict.get(networkIP);
-			if(mask2==mask){
-				found= true;
-				break;
-			}
-		 }
-    	 return found;
-     }
+    static SortedResourceSet<Ipv4, Ipv4Range> set = new SortedResourceSet<Ipv4, Ipv4Range>();
 
-     public static void loadFromFile(InputStream inputStream){
-    	 int count=0;
-         try {
-        	byte[] buffer=new byte[4096];
-			while((count = inputStream.read(buffer))>0){
-				 for (int i = 0; i < count; i+=8) {
-					 int ip = CommonMethods.readInt(buffer, i);
-			         int mask = CommonMethods.readInt(buffer, i+4);
-			         ChinaIpMaskDict.put(ip, mask);
-			         MaskDict.put(mask, mask);
-			         //System.out.printf("%s/%s\n", CommonMethods.IP2String(ip),CommonMethods.IP2String(mask));
-				 }
-			 }
-			inputStream.close();
-			System.out.printf("ChinaIpMask records count: %d\n", ChinaIpMaskDict.size());
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-     }
+    public static boolean isIPInChina(int ip) throws IllegalArgumentException {
+        Ipv4 ipv4 = Ipv4.of(Long.valueOf(ip));
+        return set.contains(ipv4);
+    }
+
+    public static boolean isIPInChina(String ip) throws IllegalArgumentException {
+        Ipv4 ipv4 = Ipv4.of(ip);
+        return set.contains(ipv4);
+    }
+
+    public static void loadFromFile(InputStream inputStream) {
+        try {
+            BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
+            String line;
+            while ((line = br.readLine()) != null) {
+                set.add(Ipv4Range.parse(line.trim()));
+            }
+            inputStream.close();
+        } catch (IOException e) {
+            // Ignore
+        }
+    }
 }

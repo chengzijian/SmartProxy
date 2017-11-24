@@ -1,5 +1,7 @@
 package me.smartproxy.core;
 
+import android.util.Log;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
@@ -31,7 +33,7 @@ public class TcpProxyServer implements Runnable {
         m_ServerSocketChannel.socket().bind(new InetSocketAddress(port));
         m_ServerSocketChannel.register(m_Selector, SelectionKey.OP_ACCEPT);
         this.Port = (short) m_ServerSocketChannel.socket().getLocalPort();
-        System.out.printf("AsyncTcpServer listen on %d success.\n", this.Port & 0xFFFF);
+        Log.d("TcpProxyServer", "AsyncTcpServer listen on " + (this.Port & 0xFFFF));
     }
 
     public void start() {
@@ -45,18 +47,20 @@ public class TcpProxyServer implements Runnable {
         if (m_Selector != null) {
             try {
                 m_Selector.close();
-                m_Selector = null;
             } catch (Exception e) {
-                e.printStackTrace();
+                Log.e("TcpProxyServer", "Exception when closing m_Selector", e);
+            } finally {
+                m_Selector = null;
             }
         }
 
         if (m_ServerSocketChannel != null) {
             try {
                 m_ServerSocketChannel.close();
-                m_ServerSocketChannel = null;
             } catch (Exception e) {
-                e.printStackTrace();
+                Log.e("TcpProxyServer", "Exception when closing m_ServerSocketChannel", e);
+            } finally {
+                m_ServerSocketChannel = null;
             }
         }
     }
@@ -81,7 +85,7 @@ public class TcpProxyServer implements Runnable {
                                 onAccepted(key);
                             }
                         } catch (Exception e) {
-                            System.out.println(e.toString());
+                            Log.d("TcpProxyServer", e.toString());
                         }
                     }
                     keyIterator.remove();
@@ -89,9 +93,10 @@ public class TcpProxyServer implements Runnable {
             }
         } catch (Exception e) {
             e.printStackTrace();
+            Log.e("TcpProxyServer", "TcpServer", e);
         } finally {
             this.stop();
-            System.out.println("TcpServer thread exited.");
+            Log.d("TcpProxyServer", "TcpServer thread exited.");
         }
     }
 
@@ -99,9 +104,11 @@ public class TcpProxyServer implements Runnable {
         short portKey = (short) localChannel.socket().getPort();
         NatSession session = NatSessionManager.getSession(portKey);
         if (session != null) {
-            if (ProxyConfig.Instance.needProxy(session.RemoteHost, session.RemoteIP)) {
+            if (ProxyConfig.Instance.needProxy(session.RemoteIP)) {
                 if (ProxyConfig.IS_DEBUG)
-                    System.out.printf("%d/%d:[PROXY] %s=>%s:%d\n", NatSessionManager.getSessionCount(), Tunnel.SessionCount, session.RemoteHost, CommonMethods.ipIntToString(session.RemoteIP), session.RemotePort & 0xFFFF);
+                    Log.d("TcpProxyServer", String.format("%d/%d:[PROXY] %s=>%s:%d", NatSessionManager.getSessionCount(),
+                            Tunnel.SessionCount, session.RemoteHost,
+                            CommonMethods.ipIntToString(session.RemoteIP), session.RemotePort & 0xFFFF));
                 return InetSocketAddress.createUnresolved(session.RemoteHost, session.RemotePort & 0xFFFF);
             } else {
                 return new InetSocketAddress(localChannel.socket().getInetAddress(), session.RemotePort & 0xFFFF);
