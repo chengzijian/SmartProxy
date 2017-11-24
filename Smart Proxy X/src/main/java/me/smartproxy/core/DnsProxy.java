@@ -146,7 +146,7 @@ public class DnsProxy implements Runnable {
             Question question = dnsPacket.Questions[0];
             if (question.Type == 1) {
                 int realIP = getFirstIP(dnsPacket);
-                if (ProxyConfig.Instance.needProxy(question.Domain)) {
+                if (ProxyConfig.Instance.needProxy(question.Domain, realIP)) {
                     int fakeIP = getOrCreateFakeIP(question.Domain);
                     tamperDnsResponse(rawPacket, dnsPacket, fakeIP);
                     if (ProxyConfig.IS_DEBUG)
@@ -199,7 +199,7 @@ public class DnsProxy implements Runnable {
         if (ProxyConfig.IS_DEBUG)
             Log.d("DnsProxy", "DNS Query " + question.Domain);
         if (question.Type == 1) {
-            if (ProxyConfig.Instance.needProxy(question.Domain)) {
+            if (ProxyConfig.Instance.needProxy(question.Domain, getIPFromCache(question.Domain))) {
                 int fakeIP = getOrCreateFakeIP(question.Domain);
                 tamperDnsResponse(ipHeader.m_Data, dnsPacket, fakeIP);
 

@@ -200,7 +200,6 @@ public class LocalVpnService extends VpnService implements Runnable {
                 // is bound to the VPN device and won't be forwarded
                 @Override
                 public void protect(long fileDescriptor) throws Exception {
-                    writeLog("Lantern Protect: %s", ""+fileDescriptor);
                     if (!LocalVpnService.this.protect((int) fileDescriptor)) {
                         throw new Exception("protect socket failed");
                     }
@@ -441,7 +440,7 @@ public class LocalVpnService extends VpnService implements Runnable {
         }
 
         try {
-            //Lantern.removeOverrides();
+            Lantern.removeOverrides();
         } catch (Exception e) {
             // Ignore
         }

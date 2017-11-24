@@ -148,35 +148,23 @@ public class ProxyConfig {
         return null;
     }
 
-    public boolean needProxy(String host) {
+    public boolean needProxy(String host, int ip) {
         if (host != null) {
             Boolean stateBoolean = getDomainState(host);
             if (stateBoolean != null) {
                 return stateBoolean.booleanValue();
             }
-
-            try {
-                if (!ChinaIpMaskManager.isIPInChina(host)) {
-                    return true;
-                }
-            } catch (IllegalArgumentException ex) {
-                // Ignore
-            }
         }
-        return false;
-    }
 
-    public boolean needProxy(int ip) {
-        if (ip > 0) {
-            if (isFakeIP(ip)) {
-                return true;
-            }
+        if (isFakeIP(ip)) {
+            return true;
+        }
 
+        if (ip != 0) {
             if (!ChinaIpMaskManager.isIPInChina(ip)) {
                 return true;
             }
         }
-
         return false;
     }
 
